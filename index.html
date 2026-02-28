@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#1a1a2e">
+  <title>PDF Voice Reader</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Upload Screen -->
+    <div id="upload-screen" class="screen active">
+      <div class="upload-container">
+        <h1>PDF Voice Reader</h1>
+        <p class="subtitle">Upload a PDF and listen to it read aloud</p>
+        <div id="drop-zone" class="drop-zone">
+          <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="12" y1="18" x2="12" y2="12"/>
+            <polyline points="9 15 12 12 15 15"/>
+          </svg>
+          <p>Drag & drop a PDF here</p>
+          <span class="or-divider">or</span>
+          <label class="file-btn">
+            Choose File
+            <input type="file" id="file-input" accept=".pdf" hidden>
+          </label>
+        </div>
+        <div id="file-info" class="file-info hidden"></div>
+      </div>
+    </div>
+
+    <!-- Reader Screen -->
+    <div id="reader-screen" class="screen">
+      <header class="reader-header">
+        <button id="back-btn" class="icon-btn" title="Back">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"/>
+          </svg>
+        </button>
+        <div class="header-info">
+          <h2 id="pdf-title">Document</h2>
+          <span id="page-indicator">Page 1 of 1</span>
+        </div>
+        <button id="settings-btn" class="icon-btn" title="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          </svg>
+        </button>
+      </header>
+
+      <!-- Progress Bar -->
+      <div class="progress-container">
+        <div id="progress-bar" class="progress-bar">
+          <div id="progress-fill" class="progress-fill"></div>
+        </div>
+        <div class="progress-labels">
+          <span id="current-time">0:00</span>
+          <span id="pages-read">0 / 0 pages</span>
+        </div>
+      </div>
+
+      <!-- Text Display -->
+      <div id="text-display" class="text-display">
+        <div id="text-content" class="text-content">
+          <p class="placeholder-text">Press play to start reading...</p>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls-container">
+        <!-- Page Navigation -->
+        <div class="page-nav">
+          <button id="prev-page-btn" class="nav-btn" title="Previous page">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="15 18 9 12 15 6"/>
+            </svg>
+          </button>
+          <div class="page-jump">
+            <input type="number" id="page-jump-input" min="1" value="1">
+            <span id="total-pages-label">/ 1</span>
+          </div>
+          <button id="next-page-btn" class="nav-btn" title="Next page">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 6 15 12 9 18"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Main Controls -->
+        <div class="main-controls">
+          <button id="rewind-btn" class="control-btn" title="Previous page">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M11 18V6l-8.5 6 8.5 6zm.5-6l8.5 6V6l-8.5 6z"/>
+            </svg>
+          </button>
+          <button id="play-btn" class="control-btn play-btn" title="Play">
+            <svg id="play-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M8 5v14l11-7z"/>
+            </svg>
+            <svg id="pause-icon" viewBox="0 0 24 24" fill="currentColor" class="hidden">
+              <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+            </svg>
+          </button>
+          <button id="forward-btn" class="control-btn" title="Next page">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M4 18l8.5-6L4 6v12zm9-12v12l8.5-6L13 6z"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Detected Language Badge -->
+        <div id="lang-badge" class="lang-badge hidden">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">
+            <circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+          <span id="lang-badge-text">Detected: English</span>
+        </div>
+
+        <!-- Speed & Voice -->
+        <div class="secondary-controls">
+          <div class="speed-control">
+            <label for="speed-slider">Speed</label>
+            <input type="range" id="speed-slider" min="0.5" max="3" step="0.1" value="1">
+            <span id="speed-value">1.0x</span>
+          </div>
+          <div class="voice-control">
+            <label for="voice-select">Voice</label>
+            <select id="voice-select"></select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings Panel -->
+      <div id="settings-panel" class="settings-panel hidden">
+        <div class="settings-content">
+          <h3>Settings</h3>
+          <div class="setting-item">
+            <label>Highlight current text</label>
+            <input type="checkbox" id="highlight-toggle" checked>
+          </div>
+          <div class="setting-item">
+            <label>Auto-scroll text</label>
+            <input type="checkbox" id="autoscroll-toggle" checked>
+          </div>
+          <div class="setting-item">
+            <label>Dark mode</label>
+            <input type="checkbox" id="darkmode-toggle" checked>
+          </div>
+          <div class="setting-item">
+            <label>Text size</label>
+            <input type="range" id="text-size-slider" min="14" max="28" value="18">
+          </div>
+          <button id="close-settings" class="file-btn">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay hidden">
+      <div class="loader">
+        <div class="spinner"></div>
+        <p id="loading-text">Extracting text...</p>
+        <div class="loading-progress">
+          <div id="loading-progress-bar" class="loading-progress-fill"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs" type="module"></script>
+  <script src="js/app.js" type="module"></script>
+</body>
+</html>
